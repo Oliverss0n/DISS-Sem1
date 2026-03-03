@@ -31,13 +31,6 @@ public class TimeManager {
     }
 
 
-    //pomocne pre vrchol K
-    public boolean isAfter625() {
-        return totalSeconds > (25 * 60);
-    }
-    public boolean isAfter630() {
-        return totalSeconds > (30 * 60);
-    }
 
     @Override
     public String toString() {

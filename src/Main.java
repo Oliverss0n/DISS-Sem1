@@ -1,3 +1,5 @@
+import Distributions.ContinuousEmpiricDist;
+import Distributions.DiscreteEmpiricDist;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -5,30 +7,36 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import javax.swing.*;
+import java.util.Random;
 
 public class Main {
 
     public static void main(String[] args) {
 
-        XYSeries series = new XYSeries("Data");
+        Random seedGen = new Random();
+        DistributionTester tester = new DistributionTester();
 
-        for (int i = 0; i < 50; i++) {
-            series.add(i, Math.random() * 10);
-        }
 
-        XYSeriesCollection dataset = new XYSeriesCollection(series);
+        double[] blackProbs = {0.1, 0.5, 0.2, 0.15, 0.05};
+        double[] blackMins = {10, 20, 32, 45, 75};
+        double[] blackMaxes = {20, 32, 45, 75, 85};
 
-        JFreeChart chart = ChartFactory.createXYLineChart(
-                "Test Graf",
-                "X",
-                "Y",
-                dataset
+        ContinuousEmpiricDist blackDist = new ContinuousEmpiricDist(
+                blackProbs,
+                blackMaxes,
+                blackMins,
+                seedGen
         );
 
-        JFrame frame = new JFrame("JFreeChart Test");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.add(new ChartPanel(chart));
-        frame.setSize(600, 400);
-        frame.setVisible(true);
+        tester.testContinuous(blackDist, 10, 85, 50_000_000);
+
+        double[] blueProbs = {0.2, 0.4, 0.4};
+        int[] blueMins = {15, 29, 45};
+        int[] blueMaxes = {29, 45, 65};
+
+        DiscreteEmpiricDist blueDist = new DiscreteEmpiricDist(blueProbs, blueMaxes, blueMins, seedGen);
+
+        tester.testDiscrete(blueDist, 15, 65, 50_000_000);
+
     }
 }

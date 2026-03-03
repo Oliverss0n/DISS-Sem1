@@ -8,7 +8,7 @@ public class DiscreteEmpiricDist {
 
     private double[] probSum;
     private int[] values;
-    private int[] maxes;            // horné hranice intervalov (exkluzívne)
+    private int[] maxes;
     private int[] mins;
     private List<Random> generators;
     private Random randSelection;
@@ -38,7 +38,7 @@ public class DiscreteEmpiricDist {
 
         for(int i = 0; i < probSum.length; i++) {
             if(row < probSum[i]) {
-                return mins[i] + generators.get(i).nextInt(maxes[i] - mins[i]+1); // +1 otazna
+                return generators.get(i).nextInt(mins[i],maxes[i]);
             }
         }
 

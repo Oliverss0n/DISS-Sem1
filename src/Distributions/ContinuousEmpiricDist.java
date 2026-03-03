@@ -43,7 +43,7 @@ public class ContinuousEmpiricDist {
 
         for (int i = 0; i < probSum.length; i++) {
             if (row < probSum[i]) {
-                return mins[i] + generators.get(i).nextDouble() * (maxes[i] - mins[i]);
+                return generators.get(i).nextDouble(mins[i], maxes[i]);
             }
         }
 

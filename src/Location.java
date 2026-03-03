@@ -2,7 +2,7 @@ public class Location {
     private final LocationType type;
     private boolean visited;
 
-    public Location(LocationType type, boolean isStore) {
+    public Location(LocationType type) {
         this.type = type;
         this.visited = false;
     }
