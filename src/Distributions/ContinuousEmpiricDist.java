@@ -6,7 +6,7 @@ import java.util.Random;
 
 public class ContinuousEmpiricDist {
 
-    private double [] probSum;
+    private double [] probSum; //atribut navrhla AI
     private double [] maxes;
     private double [] mins;
 

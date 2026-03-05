@@ -14,6 +14,6 @@ public class DiscreteUniformDist {
     }
 
     public int sample() {
-        return random.nextInt(max - min + 1) + min;
+        return random.nextInt(min,max + 1);
     }
 }

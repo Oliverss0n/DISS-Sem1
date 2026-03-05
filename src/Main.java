@@ -1,12 +1,5 @@
 import Distributions.ContinuousEmpiricDist;
 import Distributions.DiscreteEmpiricDist;
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
-
-import javax.swing.*;
 import java.util.Random;
 
 public class Main {
@@ -21,12 +14,7 @@ public class Main {
         double[] blackMins = {10, 20, 32, 45, 75};
         double[] blackMaxes = {20, 32, 45, 75, 85};
 
-        ContinuousEmpiricDist blackDist = new ContinuousEmpiricDist(
-                blackProbs,
-                blackMaxes,
-                blackMins,
-                seedGen
-        );
+        ContinuousEmpiricDist blackDist = new ContinuousEmpiricDist(blackProbs, blackMaxes, blackMins, seedGen);
 
         tester.testContinuous(blackDist, 10, 85, 50_000_000);
 

@@ -30,7 +30,9 @@ public class TimeManager {
         this.totalSeconds = 0;
     }
 
-
+    public double getTotalSeconds() {
+        return totalSeconds;
+    }
 
     @Override
     public String toString() {

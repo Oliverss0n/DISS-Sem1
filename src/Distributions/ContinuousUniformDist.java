@@ -7,6 +7,7 @@ public class ContinuousUniformDist {
     private double max;
     private Random random;
 
+
     public ContinuousUniformDist(double min, double max, Random genSeed) {
         this.min = min;
         this.max = max;
@@ -14,6 +15,6 @@ public class ContinuousUniformDist {
     }
 
     public double sample() {
-        return min + (random.nextDouble() * (max - min));
+        return min + (random.nextDouble() * (max - min)); //50+nextdouble()*30
     }
 }

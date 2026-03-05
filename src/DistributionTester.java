@@ -5,40 +5,37 @@ import java.io.PrintWriter;
 
 public class DistributionTester {
 
+    //trieda implementovana s pomocou pseodokodu vid. dokumentacia AI
     public void testDiscrete(DiscreteEmpiricDist dist, int min, int max, int samples) {
-        int[] counts = new int[max - min];
+        int[] values = new int[max - min];
 
         for (int i = 0; i < samples; i++) {
             int val = dist.sample();
-            counts[val - min]++;
+            int index = (int) (val - min);
+            values[index]++;
         }
 
-        saveToFile("discrete_results.txt", min, 1, counts, samples);
+        saveToFile("diskretne.txt", min, values);
     }
 
     public void testContinuous(ContinuousEmpiricDist dist, int min, int max, int samples) {
-        int[] bins = new int[max - min];
+        int[] values = new int[max - min];
 
         for (int i = 0; i < samples; i++) {
             double val = dist.sample();
             int index = (int) (val - min);
-            if (index >= 0 && index < bins.length) {
-                bins[index]++;
-            }
+            values[index]++;
         }
 
-        saveToFile("continuous_results.txt", min, 1, bins, samples);
+        saveToFile("spojite.txt", min, values);
     }
 
-    private void saveToFile(String fileName, int startVal, int step, int[] data, int total) {
+    private void saveToFile(String fileName, int start, int[] data) {
         try (PrintWriter writer = new PrintWriter(fileName)) {
-            writer.println("Value_Interval;Count;Relative_Frequency");
+            writer.println("Hodnota;Pocetnost");
             for (int i = 0; i < data.length; i++) {
-                double freq = (double) data[i] / total;
-                writer.println((startVal + i * step) + ";" + data[i] + ";" + freq);
+                writer.println((start + i) + ";" + data[i]);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception e) {}
     }
 }
