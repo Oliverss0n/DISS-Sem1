@@ -4,16 +4,34 @@ import java.util.Random;
 
 public class SimulationModel extends MonteCarloCore{
 
+    /* suhrn variantov:
+        1,Žilina - Divinka - Strečno - RT - Žilina
+        2,Žilina - RT - Strečno - Divinka -Žilina
+        3,Žilina - RT - Divinka - Strečno - Žilina
+        4,Žilina - Strečno - Divinka - RT - Žilina
+        5,Žilina - Divinka - RT - Strečno - Žilina
+        6,Žilina - Strečno - RT - Divinka - Žilina
+     */
+
     protected DiscreteUniformDist red;
     protected ContinuousUniformDist green;
     protected ContinuousEmpiricDist black;
 
     protected DiscreteEmpiricDist blue;
 
+    protected ContinuousUniformDist slowingGen;
+
     protected TimeManager timeManager = new TimeManager(0);
 
     protected double timeSum;
 
+    private int replications;
+
+    @Override
+    public void runSimulation(int replications) {
+        this.replications = replications; // Zapamätáme si parameter
+        super.runSimulation(replications);      // Spustíme originálnu logiku jadra
+    }
 
     @Override
     protected void beforeSimulation() {
@@ -32,8 +50,168 @@ public class SimulationModel extends MonteCarloCore{
         int[] blueMaxes = {29, 45, 65};
         blue = new DiscreteEmpiricDist(blueProbs, blueMaxes, blueMins, seedGen);
 
+        slowingGen = new ContinuousUniformDist(10, 25, seedGen);
+
         timeSum= 0;
     }
+
+
+    protected double calculateLeavingKTime(double distance, double speed, double delayBeforeK) {
+        double finalSpeed = speed;
+
+        double predicted = timeManager.getTotalSeconds() + delayBeforeK;
+
+        double limitSeconds = 35 * 60; // 35 minuta
+
+        if (predicted > limitSeconds) {
+            double slowPercent = slowingGen.sample();
+            finalSpeed = speed * ((100.0 - slowPercent) / 100.0);
+        }
+
+        return timeManager.calcTime(distance, finalSpeed);
+    }
+
+
+    //------------------------------------ DIVINKA - ZILINA - STRECNO------------------------------------------------
+    protected void driveZilinaToDivinka() {
+        double timeToK = timeManager.calcTime(2, black.sample());
+        double timeFromK = calculateLeavingKTime(2, red.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughRed = timeManager.calcTime(4, red.sample());
+        double throughGreen = timeManager.calcTime(4, green.sample());
+
+        double winner = Math.min(throughK, Math.min(throughRed, throughGreen));
+
+        timeManager.addSeconds(winner);
+    }
+    protected void driveDivinkaToZilina() {
+        double timeToK = timeManager.calcTime(2, red.sample());
+        double timeFromK = calculateLeavingKTime(2, black.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughRed = timeManager.calcTime(4, red.sample());
+        double throughGreen = timeManager.calcTime(4, green.sample());
+
+        double winner = Math.min(throughK, Math.min(throughRed, throughGreen));
+
+        timeManager.addSeconds(winner);
+    }
+    protected void driveZilinaToStrecno() {
+        double timeToK = timeManager.calcTime(2, black.sample());
+        double timeFromK = calculateLeavingKTime(4, blue.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughRed = timeManager.calcTime(3, red.sample()) + timeManager.calcTime(4, red.sample()); //MOZEM TOTO???
+        double throughGreen_Black = timeManager.calcTime(4, green.sample())+ timeManager.calcTime(3, black.sample());
+
+        double winner = Math.min(throughK, Math.min(throughRed, throughGreen_Black));
+
+        timeManager.addSeconds(winner);
+    }
+
+    protected void driveStrecnoToZilina() {
+        double timeToK = timeManager.calcTime(4, blue.sample());
+        double timeFromK = calculateLeavingKTime(2, black.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughRed = timeManager.calcTime(4, red.sample()) + timeManager.calcTime(3, red.sample()); //MOZEM TOTO???
+        double throughGreen_Black = timeManager.calcTime(3, black.sample()) + timeManager.calcTime(4, green.sample());
+
+        double winner = Math.min(throughK, Math.min(throughRed, throughGreen_Black));
+
+        timeManager.addSeconds(winner);
+    }
+
+
+    //-------------------------------STRECNO - RT----------------------------
+
+    protected void driveStrecnoToRT() {
+        double timeToK = timeManager.calcTime(4, blue.sample());
+        double timeFromK = calculateLeavingKTime(2, green.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughBlue= timeManager.calcTime(5, blue.sample()) + timeManager.calcTime(8, blue.sample()); //MOZEM TOTO???
+        double throughBlue_Black = timeManager.calcTime(5, black.sample()) + timeManager.calcTime(8, blue.sample());
+
+        double winner = Math.min(throughK, Math.min(throughBlue, throughBlue_Black));
+
+        timeManager.addSeconds(winner);
+    }
+
+    protected void driveRTtoStrecno() {
+        double timeToK = timeManager.calcTime(2, green.sample());
+        double timeFromK = calculateLeavingKTime(4, blue.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughBlue= timeManager.calcTime(8, blue.sample()) + timeManager.calcTime(5, blue.sample()); //MOZEM TOTO???
+        double throughBlue_Black = timeManager.calcTime(8, blue.sample()) + timeManager.calcTime(5, black.sample());
+
+        double winner = Math.min(throughK, Math.min(throughBlue, throughBlue_Black));
+
+        timeManager.addSeconds(winner);
+    }
+
+    //------------------------------- RT - DIVINKA ---------------------------
+    protected void driveRTToDivinka() {
+        double timeToK = timeManager.calcTime(2, green.sample());
+        double timeFromK = calculateLeavingKTime(2, red.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughBlue_Red_Black = timeManager.calcTime(1, blue.sample()) + timeManager.calcTime(3, red.sample()) + timeManager.calcTime(1, black.sample()); //MOZEM TOTO???
+        double throughBlue_Red_Blue_Black =
+                timeManager.calcTime(1, blue.sample()) + timeManager.calcTime(2, red.sample()) + timeManager.calcTime(1, blue.sample()) + timeManager.calcTime(1, black.sample());
+
+        double winner = Math.min(throughK, Math.min(throughBlue_Red_Black, throughBlue_Red_Blue_Black));
+
+        timeManager.addSeconds(winner);
+    }
+
+    protected void driveDivinkaToRT() {
+        double timeToK = timeManager.calcTime(2, red.sample());
+        double timeFromK = calculateLeavingKTime(2, green.sample(), timeToK);
+        double throughK = timeToK + timeFromK;
+
+        double throughBlue_Red_Black = timeManager.calcTime(1, blue.sample()) + timeManager.calcTime(3, red.sample()) + timeManager.calcTime(1, black.sample()); //MOZEM TOTO???
+        double throughBlue_Red_Blue_Black =
+                timeManager.calcTime(1, blue.sample()) + timeManager.calcTime(2, red.sample()) + timeManager.calcTime(1, blue.sample()) + timeManager.calcTime(1, black.sample());
+
+        double winner = Math.min(throughK, Math.min(throughBlue_Red_Black, throughBlue_Red_Blue_Black));
+
+        timeManager.addSeconds(winner);
+    }
+
+
+    protected void driveZilinaToRT() {
+        double timeToK = timeManager.calcTime(2, black.sample());
+        double timeFromK = calculateLeavingKTime(2, green.sample(), timeToK);
+
+        timeManager.addSeconds(timeToK + timeFromK);
+    }
+
+    protected void driveRTtoZilina() {
+        double timeToK = timeManager.calcTime(2, green.sample());
+        double timeFromK = calculateLeavingKTime(2, black.sample(), timeToK);
+
+        timeManager.addSeconds(timeToK + timeFromK);
+    }
+
+    protected void driveDivinkaToStrecno() {
+        double timeToK = timeManager.calcTime(2, red.sample());
+        double timeFromK = calculateLeavingKTime(4, blue.sample(), timeToK);
+
+        timeManager.addSeconds(timeToK + timeFromK);
+    }
+
+    protected void driveStrecnoToDivinka() {
+        double timeToK = timeManager.calcTime(4, blue.sample());
+        double timeFromK = calculateLeavingKTime(2, red.sample(), timeToK);
+
+        timeManager.addSeconds(timeToK + timeFromK);
+    }
+
+
+
 
     @Override
     protected void beforeReplication() {
@@ -50,7 +228,14 @@ public class SimulationModel extends MonteCarloCore{
 
     @Override
     protected void afterSimulation() {
-        System.out.println("Simulácia dobehla.");
+        double averageSeconds = this.timeSum / (double)this.replications;
+
+        timeManager.reset();
+        timeManager.addSeconds(averageSeconds);
+
+        System.out.println(this.toString());
+        System.out.println("Cas prichodu: " + timeManager.toString());
+        System.out.println("-----------------------------------------------");
     }
 
 

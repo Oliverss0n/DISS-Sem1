@@ -15,6 +15,6 @@ public class ContinuousUniformDist {
     }
 
     public double sample() {
-        return min + (random.nextDouble() * (max - min)); //50+nextdouble()*30
+        return min + (random.nextDouble() * (max - min));
     }
 }

@@ -1,11 +1,8 @@
-import Distributions.ContinuousEmpiricDist;
-import Distributions.DiscreteEmpiricDist;
-import java.util.Random;
-
 public class Main {
 
     public static void main(String[] args) {
 
+        /* -----------------------------------------TESTY--------------------------------------------------
         Random seedGen = new Random();
         DistributionTester tester = new DistributionTester();
 
@@ -24,7 +21,14 @@ public class Main {
 
         DiscreteEmpiricDist blueDist = new DiscreteEmpiricDist(blueProbs, blueMaxes, blueMins, seedGen);
 
-        tester.testDiscrete(blueDist, 15, 65, 50_000_000);
+        tester.testDiscrete(blueDist, 15, 65, 50_000_000);*/
+
+        SimulationModel[] varianty = { new Variant1(), new Variant2(), new Variant3(), new Variant4(),new Variant5(), new Variant6() };
+
+        for (SimulationModel variant : varianty) {
+            variant.runSimulation(1_000_000);
+        }
 
     }
+
 }

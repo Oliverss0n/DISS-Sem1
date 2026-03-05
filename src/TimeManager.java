@@ -19,19 +19,28 @@ public class TimeManager {
         totalSeconds += s;
     }
 
-    //v km
     public void addTravelTime(double distance, double speed) {
         if (speed > 0) {
             double hours = distance / speed;
             this.totalSeconds += (hours * 3600);
         }
     }
+
+    public double calcTime(double distance, double speed) {
+            return (distance / speed) * 3600;
+    }
+
+
     public void reset() {
         this.totalSeconds = 0;
     }
 
     public double getTotalSeconds() {
         return totalSeconds;
+    }
+
+    public void addTravelTime(double seconds) {
+        this.totalSeconds += seconds;
     }
 
     @Override
