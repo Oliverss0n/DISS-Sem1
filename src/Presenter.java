@@ -1,6 +1,6 @@
 import javax.swing.SwingWorker;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 public class Presenter {
     private final ISimulationView view;
@@ -12,81 +12,54 @@ public class Presenter {
     }
 
     public void startSimulation() {
-        // 1. Zastavíme predchádzajúci beh, aby sa vlákna nebili,
-        // ale v GUI nič nezasedujeme
         stopSimulation();
-
         view.clearConsole();
         view.clearGraphs();
-        view.appendToConsole("Nové spustenie simulácie: " + view.getReplications() + " replikácií.");
 
-        // 2. Vytvorenie nových inštancií
+        final int totalReps = view.getReplications();
+        final double skipPercent = view.getSkipPercentage();
+        final int maxPoints = view.getMaxPoints();
+
+        view.appendToConsole("Štartujem simuláciu: " + totalReps + " replikácií.");
+
+        // Inicializácia tvojich 6 variantov
         variants = new SimulationModel[]{
                 new Variant1(), new Variant2(), new Variant3(),
                 new Variant4(), new Variant5(), new Variant6()
         };
 
-        // 3. Spustíme nové výpočty
+        // Spustíme každý variant v samostatnom vlákne, aby bežali naraz a grafy sa hýbali spolu
         for (int i = 0; i < variants.length; i++) {
-            runVariant(i, variants[i]);
+            runVariant(i, variants[i], totalReps, skipPercent, maxPoints);
         }
     }
 
-    public void stopSimulation() {
-        // Povieme modelom, aby prestali (ak bežia)
-        if (variants != null) {
-            for (SimulationModel m : variants) {
-                if (m != null) m.stop();
-            }
-        }
-
-        // Zrušíme všetky bežiace SwingWorkery
-        for (SwingWorker<Void, double[]> worker : activeWorkers) {
-            if (!worker.isDone()) {
-                worker.cancel(true);
-            }
-        }
-        activeWorkers.clear();
-
-        // Výpis do konzoly
-        view.appendToConsole("Simulácia prerušená/zastavená.");
-        if (variants != null) {
-            for (int i = 0; i < variants.length; i++) {
-                if (variants[i] != null) {
-                    view.appendToConsole(String.format("V%d: %.2f s", (i + 1), variants[i].getAverageArrivalSeconds()));
-                }
-            }
-        }
-    }
-
-    private void runVariant(int index, SimulationModel model) {
-        final int totalReps = view.getReplications();
-        final double skipPercent = view.getSkipPercentage();
-        final int maxPoints = view.getMaxPoints();
-
+    private void runVariant(int index, SimulationModel model, int totalReps, double skipPercent, int maxPoints) {
         SwingWorker<Void, double[]> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() {
-                // Vynútime, aby model vedel, že má bežať (reset flagu)
+                // Toto presne robí tvoja runSimulation na začiatku
                 model.beforeSimulation();
 
                 int skipCount = (int) (totalReps * (skipPercent / 100.0));
+                // Výpočet, po koľkých replikáciách pridáme bod do grafu
                 int interval = Math.max(1, (totalReps - skipCount) / maxPoints);
 
+                // RUČNÝ CYKLUS (nahrádza runSimulation bez zmeny jadra)
                 for (int i = 1; i <= totalReps; i++) {
-                    // Kontrola, či sme neklikli na Stop alebo znova na Štart
-                    if (isCancelled() || !model.isRunning()) {
-                        break;
-                    }
+                    if (isCancelled() || !model.isRunning()) break;
 
                     model.beforeReplication();
-                    model.doReplication();
-                    model.afterReplication();
+                    model.doReplication();    // Tvoja biznis logika z MonteCarloCore
+                    model.afterReplication(); // Tvoja štatistika z MonteCarloCore
 
+                    // POSIELANIE DÁT DO GRAFU
                     if (i > skipCount && (i - skipCount) % interval == 0) {
                         publish(new double[]{(double) i, model.getAverageArrivalSeconds()});
                     }
                 }
+
+                // Toto robí runSimulation na konci
                 model.afterSimulation();
                 return null;
             }
@@ -100,12 +73,32 @@ public class Presenter {
 
             @Override
             protected void done() {
-                // Tu nerobíme nič so zasedovaním tlačidiel,
-                // nechávame ich stále v takom stave, v akom sú.
+                // Keď variant skončí, vypíšeme finálny výsledok do konzoly
+                double finalAvg = model.getAverageArrivalSeconds();
+                view.appendToConsole(String.format("Variant %d dokončený: %s",
+                        (index + 1), formatToTime(finalAvg)));
             }
         };
 
         activeWorkers.add(worker);
         worker.execute();
+    }
+
+    public void stopSimulation() {
+        if (variants != null) {
+            for (SimulationModel v : variants) if (v != null) v.stop();
+        }
+        for (SwingWorker<Void, double[]> w : activeWorkers) {
+            if (!w.isDone()) w.cancel(true);
+        }
+        activeWorkers.clear();
+    }
+
+    private String formatToTime(double totalSeconds) {
+        if (Double.isNaN(totalSeconds)) return "00:00:00";
+        int h = (int) (totalSeconds / 3600);
+        int m = (int) ((totalSeconds % 3600) / 60);
+        int s = (int) (totalSeconds % 60);
+        return String.format("%02d:%02d:%02d (%.2f s)", h, m, s, totalSeconds);
     }
 }
