@@ -21,16 +21,23 @@ public class SimulationModel extends MonteCarloCore{
 
     protected ContinuousUniformDist slowingGen;
 
+    protected double startSeconds;
     protected TimeManager timeManager = new TimeManager(0);
 
     protected double timeSum;
 
     private int replications;
 
+    public void setStartTime(int hours, int minutes) {
+        this.startSeconds = hours * 3600 + minutes * 60;
+        this.timeManager = new TimeManager(this.startSeconds);
+    }
+
+
     @Override
     public void runSimulation(int replications) {
-        this.replications = replications; // Zapamätáme si parameter
-        super.runSimulation(replications);      // Spustíme originálnu logiku jadra
+        this.replications = replications;
+        super.runSimulation(replications);
     }
 
     @Override
@@ -50,18 +57,21 @@ public class SimulationModel extends MonteCarloCore{
         int[] blueMaxes = {29, 45, 65};
         blue = new DiscreteEmpiricDist(blueProbs, blueMaxes, blueMins, seedGen);
 
-        slowingGen = new ContinuousUniformDist(10, 25, seedGen);
+        slowingGen = new ContinuousUniformDist(10, 25, seedGen);//TUTOOOO
 
         timeSum= 0;
     }
 
 
+
     protected double calculateLeavingKTime(double distance, double speed, double delayBeforeK) {
+
+        // MUSIM VZDY VYGENEROVAT NOVE!!!!!!!!!!!!!!!!!!!!!!!!!!
         double finalSpeed = speed;
 
-        double predicted = timeManager.getTotalSeconds() + delayBeforeK;
+        double predicted = (timeManager.getTotalSeconds() - this.startSeconds) + delayBeforeK;
 
-        double limitSeconds = 35 * 60; // 35 minuta
+        double limitSeconds = (6 * 3600) + (45 * 60); // h + m
 
         if (predicted > limitSeconds) {
             double slowPercent = slowingGen.sample();
@@ -70,6 +80,7 @@ public class SimulationModel extends MonteCarloCore{
 
         return timeManager.calcTime(distance, finalSpeed);
     }
+
 
 
     //------------------------------------ DIVINKA - ZILINA - STRECNO------------------------------------------------
@@ -223,7 +234,7 @@ public class SimulationModel extends MonteCarloCore{
 
     @Override
     protected void afterReplication() {
-        timeSum += timeManager.getTotalSeconds();
+        timeSum += (timeManager.getTotalSeconds() - this.startSeconds);
     }
 
     @Override

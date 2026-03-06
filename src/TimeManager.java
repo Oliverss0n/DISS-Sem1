@@ -2,10 +2,12 @@ public class TimeManager {
 
     //s/v * 60
     private double totalSeconds;
+    private double startSeconds;
 
 
-    public TimeManager(double seconds) {
-        this.totalSeconds = seconds;
+    public TimeManager(double startSeconds) {
+        this.startSeconds = startSeconds;
+        this.totalSeconds = startSeconds;
     }
 
 
@@ -32,7 +34,7 @@ public class TimeManager {
 
 
     public void reset() {
-        this.totalSeconds = 0;
+        this.totalSeconds = startSeconds;
     }
 
     public double getTotalSeconds() {
@@ -45,9 +47,8 @@ public class TimeManager {
 
     @Override
     public String toString() {
-
         int currentTotalSeconds = (int) totalSeconds;
-        int hours = 6 + (currentTotalSeconds / 3600);
+        int hours = (currentTotalSeconds / 3600) % 24;
         int minutes = (currentTotalSeconds % 3600) / 60;
         int seconds = currentTotalSeconds % 60;
 

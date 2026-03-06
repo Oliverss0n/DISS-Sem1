@@ -26,6 +26,7 @@ public class Main {
         SimulationModel[] varianty = { new Variant1(), new Variant2(), new Variant3(), new Variant4(),new Variant5(), new Variant6() };
 
         for (SimulationModel variant : varianty) {
+            variant.setStartTime(6, 0);
             variant.runSimulation(1_000_000);
         }
 
