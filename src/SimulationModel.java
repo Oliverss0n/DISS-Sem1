@@ -1,5 +1,8 @@
 import Distributions.*;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class SimulationModel extends MonteCarloCore{
@@ -34,11 +37,16 @@ public class SimulationModel extends MonteCarloCore{
     private final double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
     //private final double limitSeconds = (DELAY_HOUR * 3600) + (DELAY_MINUTE * 60);
 
-    protected java.util.List<Double> graphPoints = new java.util.ArrayList<>();
-    // Parametre pre graf (nastavené z GUI)
+    protected ArrayList<Double> graphPoints =new ArrayList<>();
     protected double skipPercentage = 0;
     protected int maxPoints = 1000;
     protected int currentReplication;
+
+    // --- Úloha 2 ---
+    private LinkedList<Double> resultsPart2 = new LinkedList<>();
+    private boolean part2Active = false;
+    private final double targetArrivalTask2 = (7 * 3600) + (35 * 60); // 7:35 v sekundách
+    //------------------
 
     @Override
     public void runSimulation(int replications) {
@@ -240,7 +248,12 @@ public class SimulationModel extends MonteCarloCore{
     @Override
     protected void afterReplication() {
         currentReplication++;
-        timeSum += (timeManager.getTotalSeconds() - this.startSeconds);
+        double duration = timeManager.getTotalSeconds() - this.startSeconds;
+        timeSum += duration;
+
+        if(part2Active) {
+            resultsPart2.add(duration);
+        }
     }
 
     @Override
@@ -256,14 +269,46 @@ public class SimulationModel extends MonteCarloCore{
         System.out.println(this.toString() + " | Priemer: " + getAverageArrivalSeconds());
     }
 
+    private void evaluateTask2() {
+        // 1. Usporiadame namerané časy (trvania cesty)
+        Collections.sort(resultsPart2);
+
+        // 2. Nájdeme 80. percentil (i-ty najmenší prvok)
+        int index80 = (int) (resultsPart2.size() * 0.80);
+        // Ošetrenie pre prípad veľmi malého počtu replikácií
+        if (index80 >= resultsPart2.size()) index80 = resultsPart2.size() - 1;
+
+        double travelTime80 = resultsPart2.get(index80);
+
+        // 3. Výpočet kedy vyraziť (7:35 - trvanie cesty)
+        double departureTime = targetArrivalTask2 - travelTime80;
+
+        // 4. Výpis výsledku
+        System.out.println("\n--- VÝSLEDOK ÚLOHY 2 (80% pravdepodobnosť) ---");
+        System.out.println("Počet spracovaných replikácií: " + resultsPart2.size());
+        System.out.println("80% jázd trvalo maximálne: " + formatTime(travelTime80));
+        System.out.println("Kuriér musí vyraziť najneskôr o: " + formatTime(departureTime));
+        System.out.println("----------------------------------------------\n");
+    }
+
     public double getAverageArrivalSeconds() {
         if (currentReplication == 0) return startSeconds;
         return (timeSum / currentReplication) + startSeconds;
     }
 
-    public int getCurrentReplication() {
-        return currentReplication;
+    public void setPart2Active(boolean active) {
+        this.part2Active = active;
     }
+
+
+    private String formatTime(double totalSecs) {
+        int s = (int) Math.abs(totalSecs);
+        int h = s / 3600;
+        int m = (s % 3600) / 60;
+        int sec = s % 60;
+        return String.format("%02d:%02d:%02d", h, m, sec);
+    }
+
 
 
 

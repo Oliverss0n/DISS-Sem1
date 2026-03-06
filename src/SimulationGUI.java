@@ -18,6 +18,7 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     private JButton runBtn = new JButton("Spustiť všetko");
     private JButton stopBtn = new JButton("Zastaviť");
 
+    private JCheckBox part2Cb = new JCheckBox("Úloha 2");
     private JTextArea resultsArea = new JTextArea(10, 50);
     private XYSeries[] seriesArray = new XYSeries[6];
     private Presenter presenter;
@@ -47,6 +48,7 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         topPanel.add(runBtn);
         topPanel.add(stopBtn);
         add(topPanel, BorderLayout.NORTH);
+        topPanel.add(part2Cb);
 
         initTabs();
         add(tabbedPane, BorderLayout.CENTER);
@@ -129,6 +131,11 @@ public class SimulationGUI extends JFrame implements ISimulationView {
             resultsArea.append(text + "\n");
             resultsArea.setCaretPosition(resultsArea.getDocument().getLength());
         });
+    }
+
+    @Override
+    public boolean isPart2Enabled() {
+        return part2Cb.isSelected();
     }
 
     public static void main(String[] args) {

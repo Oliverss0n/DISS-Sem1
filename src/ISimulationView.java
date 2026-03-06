@@ -7,4 +7,5 @@ public interface ISimulationView {
     void setSimulationRunning(boolean running);
     void appendToConsole(String text);
     void clearConsole();
+    boolean isPart2Enabled();
 }
