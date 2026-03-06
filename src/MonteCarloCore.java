@@ -1,6 +1,6 @@
 public abstract class MonteCarloCore {
 
-    private boolean running;
+    protected boolean running;
 
     public void runSimulation(int replicationCount) {
         int currReplication = 1;

@@ -48,6 +48,7 @@ public class SimulationModel extends MonteCarloCore{
 
     @Override
     protected void beforeSimulation() {
+        this.running = true;
         Random seedGen = new Random();
         this.timeManager = new TimeManager(startSeconds);
 
