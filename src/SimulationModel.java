@@ -20,19 +20,25 @@ public class SimulationModel extends MonteCarloCore{
     protected DiscreteEmpiricDist blue;
 
     protected ContinuousUniformDist slowingGen;
-
-    protected double startSeconds;
     protected TimeManager timeManager = new TimeManager(0);
 
     protected double timeSum;
 
     private int replications;
 
-    public void setStartTime(int hours, int minutes) {
-        this.startSeconds = hours * 3600 + minutes * 60;
-        this.timeManager = new TimeManager(this.startSeconds);
-    }
+    private static final int DELAY_HOUR = 6;
+    private static final int DELAY_MINUTE = 30;
+    private static final int START_HOUR = 6;
+    private static final int START_MINUTE = 0;
 
+    private final double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
+    //private final double limitSeconds = (DELAY_HOUR * 3600) + (DELAY_MINUTE * 60);
+
+    protected java.util.List<Double> graphPoints = new java.util.ArrayList<>();
+    // Parametre pre graf (nastavené z GUI)
+    protected double skipPercentage = 0;
+    protected int maxPoints = 1000;
+    protected int currentReplication;
 
     @Override
     public void runSimulation(int replications) {
@@ -43,6 +49,7 @@ public class SimulationModel extends MonteCarloCore{
     @Override
     protected void beforeSimulation() {
         Random seedGen = new Random();
+        this.timeManager = new TimeManager(startSeconds);
 
         red = new DiscreteUniformDist(55, 75, seedGen);
         green = new ContinuousUniformDist(50, 80, seedGen);
@@ -57,24 +64,21 @@ public class SimulationModel extends MonteCarloCore{
         int[] blueMaxes = {29, 45, 65};
         blue = new DiscreteEmpiricDist(blueProbs, blueMaxes, blueMins, seedGen);
 
-        slowingGen = new ContinuousUniformDist(10, 25, seedGen);//TUTOOOO
+        slowingGen = new ContinuousUniformDist(10, 25, seedGen);
 
-        timeSum= 0;
+        this.timeSum = 0;
+        this.currentReplication = 0;
+        this.graphPoints.clear();
     }
 
-
-
     protected double calculateLeavingKTime(double distance, double speed, double delayBeforeK) {
-
-        // MUSIM VZDY VYGENEROVAT NOVE!!!!!!!!!!!!!!!!!!!!!!!!!!
         double finalSpeed = speed;
+        double slowPercent = slowingGen.sample();
+        double predicted = timeManager.getTotalSeconds() + delayBeforeK;
 
-        double predicted = (timeManager.getTotalSeconds() - this.startSeconds) + delayBeforeK;
+        double limitSeconds = (DELAY_HOUR * 3600) + (DELAY_MINUTE * 60);
 
-        double limitSeconds = (6 * 3600) + (45 * 60); // h + m
-
-        if (predicted > limitSeconds) {
-            double slowPercent = slowingGen.sample();
+        if (predicted >= limitSeconds) {
             finalSpeed = speed * ((100.0 - slowPercent) / 100.0);
         }
 
@@ -234,6 +238,7 @@ public class SimulationModel extends MonteCarloCore{
 
     @Override
     protected void afterReplication() {
+        currentReplication++;
         timeSum += (timeManager.getTotalSeconds() - this.startSeconds);
     }
 
@@ -247,7 +252,18 @@ public class SimulationModel extends MonteCarloCore{
         System.out.println(this.toString());
         System.out.println("Cas prichodu: " + timeManager.toString());
         System.out.println("-----------------------------------------------");
+        System.out.println(this.toString() + " | Priemer: " + getAverageArrivalSeconds());
     }
+
+    public double getAverageArrivalSeconds() {
+        if (currentReplication == 0) return startSeconds;
+        return (timeSum / currentReplication) + startSeconds;
+    }
+
+    public int getCurrentReplication() {
+        return currentReplication;
+    }
+
 
 
 }

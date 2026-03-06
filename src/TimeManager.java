@@ -11,12 +11,6 @@ public class TimeManager {
     }
 
 
-    public boolean isAfter(int h, int m)
-    {
-        double s = h * 3600 + m * 60;
-        return totalSeconds > s;
-    }
-
     public void addSeconds(double s) {
         totalSeconds += s;
     }
@@ -41,9 +35,6 @@ public class TimeManager {
         return totalSeconds;
     }
 
-    public void addTravelTime(double seconds) {
-        this.totalSeconds += seconds;
-    }
 
     @Override
     public String toString() {
