@@ -31,7 +31,7 @@ public class SimulationModel extends MonteCarloCore{
 
     private static final int DELAY_HOUR = 6;
     private static final int DELAY_MINUTE = 30;
-    private static final int START_HOUR = 6;
+    private static final int START_HOUR = 10;
     private static final int START_MINUTE = 0;
 
     private final double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
@@ -270,25 +270,26 @@ public class SimulationModel extends MonteCarloCore{
     }
 
     private void evaluateTask2() {
-        // 1. Usporiadame namerané časy (trvania cesty)
         Collections.sort(resultsPart2);
 
-        // 2. Nájdeme 80. percentil (i-ty najmenší prvok)
         int index80 = (int) (resultsPart2.size() * 0.80);
-        // Ošetrenie pre prípad veľmi malého počtu replikácií
         if (index80 >= resultsPart2.size()) index80 = resultsPart2.size() - 1;
 
         double travelTime80 = resultsPart2.get(index80);
-
-        // 3. Výpočet kedy vyraziť (7:35 - trvanie cesty)
         double departureTime = targetArrivalTask2 - travelTime80;
 
-        // 4. Výpis výsledku
-        System.out.println("\n--- VÝSLEDOK ÚLOHY 2 (80% pravdepodobnosť) ---");
-        System.out.println("Počet spracovaných replikácií: " + resultsPart2.size());
-        System.out.println("80% jázd trvalo maximálne: " + formatTime(travelTime80));
-        System.out.println("Kuriér musí vyraziť najneskôr o: " + formatTime(departureTime));
-        System.out.println("----------------------------------------------\n");
+        // String builder pre prehľadný výpis
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n--- VÝSLEDOK ÚLOHY 2 (80% PRAVDEPODOBNOSŤ) ---\n");
+        sb.append("Cieľ príchodu: 07:35:00\n");
+        sb.append("Odsimulované replikácie: ").append(resultsPart2.size()).append("\n");
+        sb.append("80% ciest bolo kratších ako: ").append(formatTime(travelTime80)).append("\n");
+        sb.append("NAJNESKORŠÍ ODCHOD: ").append(formatTime(departureTime)).append("\n");
+        sb.append("----------------------------------------------\n");
+
+        // Ak máš v modeli prístup k view (cez Presenter), pošli to tam
+        // Inak to vypíš aspoň do System.out, kým to neprepojíš
+        System.out.println(sb.toString());
     }
 
     public double getAverageArrivalSeconds() {
