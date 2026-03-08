@@ -7,6 +7,8 @@ public class Presenter {
     private final List<SwingWorker<Void, ?>> activeWorkers = new ArrayList<>();
     private SimulationModel[] variants;
 
+    private SimulationModel task2Model;
+
     public Presenter(ISimulationView view) {
         this.view = view;
     }
@@ -19,26 +21,53 @@ public class Presenter {
 
         int totalReps = view.getReplications();
         variants = createVariants();
+        //variants = new SimulationModel[]{
+         //       new Variant1(), new Variant2(), new Variant3(),
+           //     new Variant4(), new Variant5(), new Variant6()};
 
         for (int i = 0; i < variants.length; i++) {
             runVariant(i, variants[i], totalReps, false);
         }
     }
 
+    // Pomocná metóda na vytvorenie správnej triedy podľa indexu z ComboBoxu
+    private SimulationModel createVariant(int index) {
+        switch (index) {
+            case 0: return new Variant1();
+            case 1: return new Variant2();
+            case 2: return new Variant3();
+            case 3: return new Variant4();
+            case 4: return new Variant5();
+            case 5: return new Variant6();
+            default: return new Variant1();
+        }
+    }
     // NOVÁ METÓDA PRE ÚLOHU 2
-    public void startTask2(int selectedIdx) {
-        stopSimulation();
+    public void startTask2(int variantIndex) {
+        stopSimulation(); // Vyčistíme staré behy
         view.clearConsole();
-        view.clearGraphs();
 
-        int totalReps = view.getReplications();
-        variants = createVariants();
+        // --- ZMENA TU: Priraď model PRED spustením vlákna ---
+        this.task2Model = createVariant(variantIndex);
+        this.task2Model.setPart2Active(true);
+        int reps = view.getReplications();
 
-        SimulationModel selectedModel = variants[selectedIdx];
-        selectedModel.setPart2Active(true);
+        new Thread(() -> {
+            view.setSimulationRunning(true);
+            view.appendToConsole("Výpočet Úlohy 2 spustený...");
 
-        view.appendToConsole("Spúšťam Úlohu 2 pre Variant " + (selectedIdx + 1) + "...");
-        runVariant(selectedIdx, selectedModel, totalReps, true);
+            // Spustíme ten model, ktorý už je uložený v "this.task2Model"
+            this.task2Model.runSimulation(reps);
+
+            // Získame výsledok (ak bol stopnutý, vypíše priebežný)
+            if (this.task2Model != null) {
+                String result = this.task2Model.getPart2Result();
+                view.appendToConsole(result);
+            }
+
+            view.setSimulationRunning(false);
+            this.task2Model = null;
+        }).start();
     }
 
     private void runVariant(int index, SimulationModel model, int totalReps, boolean isTask2) {
@@ -105,8 +134,17 @@ public class Presenter {
 
     public void stopSimulation() {
         if (variants != null) {
-            for (SimulationModel v : variants) if (v != null) v.stop();
+            for (SimulationModel v : variants)  {
+                if (v != null){
+                    v.stop();
+                }
+            }
         }
+
+        if (task2Model != null) {
+            task2Model.stop();
+        }
+
         for (SwingWorker<?, ?> w : activeWorkers) w.cancel(true);
         activeWorkers.clear();
     }

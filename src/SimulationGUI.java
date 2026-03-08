@@ -22,7 +22,6 @@ public class SimulationGUI extends JFrame implements ISimulationView {
             "Variant 1", "Variant 2", "Variant 3", "Variant 4", "Variant 5", "Variant 6"
     });
     private JButton runTask2Btn = new JButton("Spustiť Úlohu 2 (80%)");
-    private JCheckBox part2Cb = new JCheckBox("Úloha 2 Aktívna");
 
     private JTextArea resultsArea = new JTextArea(10, 50);
     private XYSeries[] seriesArray = new XYSeries[6];
@@ -52,7 +51,6 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         task2Panel.setBorder(BorderFactory.createTitledBorder("Nastavenia pre Úlohu 2"));
         task2Panel.add(new JLabel("Vyber variant:"));
         task2Panel.add(variantCombo);
-        task2Panel.add(part2Cb);
         task2Panel.add(runTask2Btn);
 
         // Spojenie panelov na sever
@@ -65,7 +63,6 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         runBtn.addActionListener(e -> presenter.startSimulation());
         stopBtn.addActionListener(e -> presenter.stopSimulation());
         runTask2Btn.addActionListener(e -> {
-            part2Cb.setSelected(true); // Automaticky zapne check pri kliknutí na toto tlačidlo
             presenter.startTask2(variantCombo.getSelectedIndex());
         });
 
@@ -127,7 +124,9 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         }
     }
 
-    @Override public void addPointToGraph(int idx, double x, double y) { seriesArray[idx].add(x, y); }
+    @Override public void addPointToGraph(int idx, double x, double y) {
+        seriesArray[idx].add(x, y);
+    }
     @Override public void setSimulationRunning(boolean running) {
         runBtn.setEnabled(!running);
         runTask2Btn.setEnabled(!running);
@@ -139,13 +138,18 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     @Override public int getMaxPoints() { return Integer.parseInt(pointsIn.getText()); }
     @Override public void clearGraphs() { for (XYSeries s : seriesArray) s.clear(); }
     @Override public void clearConsole() { resultsArea.setText(""); }
+
+    @Override
+    public boolean isPart2Enabled() {
+        return false;
+    }
+
     @Override public void appendToConsole(String text) {
         SwingUtilities.invokeLater(() -> {
             resultsArea.append(text + "\n");
             resultsArea.setCaretPosition(resultsArea.getDocument().getLength());
         });
     }
-    @Override public boolean isPart2Enabled() { return part2Cb.isSelected(); }
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new SimulationGUI().setVisible(true));

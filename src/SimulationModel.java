@@ -31,22 +31,29 @@ public class SimulationModel extends MonteCarloCore{
 
     private static final int DELAY_HOUR = 6;
     private static final int DELAY_MINUTE = 30;
-    private static final int START_HOUR = 10;
+    private static final int START_HOUR = 6;
     private static final int START_MINUTE = 0;
 
-    private final double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
-    //private final double limitSeconds = (DELAY_HOUR * 3600) + (DELAY_MINUTE * 60);
+
+
+    private double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
 
     protected ArrayList<Double> graphPoints =new ArrayList<>();
-    protected double skipPercentage = 0;
-    protected int maxPoints = 1000;
     protected int currentReplication;
 
-    // --- Úloha 2 ---
-    private LinkedList<Double> resultsPart2 = new LinkedList<>();
+    // ---------------------------- uloha 2 -------------------------
+    private static final int U2_HOUR = 7;
+    private static final int U2_MINUTE = 35;
+
+    private static final int U2_INIT_HOUR = 7;
+    private static final int U2_INIT_MINUTE = 0;
+    private double targetArrivalPart2 = (U2_HOUR * 3600) + (U2_MINUTE * 60);
+    private double initialTime = (U2_INIT_HOUR * 3600) + (U2_INIT_MINUTE * 60);
     private boolean part2Active = false;
-    private final double targetArrivalTask2 = (7 * 3600) + (35 * 60); // 7:35 v sekundách
-    //------------------
+    private LinkedList<Double> part2Durations = new LinkedList<>();
+
+
+    //-------------------------------------------------------------
 
     @Override
     public void runSimulation(int replications) {
@@ -59,6 +66,7 @@ public class SimulationModel extends MonteCarloCore{
         this.running = true;
         Random seedGen = new Random();
         this.timeManager = new TimeManager(startSeconds);
+
 
         red = new DiscreteUniformDist(55, 75, seedGen);
         green = new ContinuousUniformDist(50, 80, seedGen);
@@ -78,6 +86,10 @@ public class SimulationModel extends MonteCarloCore{
         this.timeSum = 0;
         this.currentReplication = 0;
         this.graphPoints.clear();
+
+        if(part2Active) {
+            this.part2Durations.clear();
+        }
     }
 
     protected double calculateLeavingKTime(double distance, double speed, double delayBeforeK) {
@@ -252,12 +264,28 @@ public class SimulationModel extends MonteCarloCore{
         timeSum += duration;
 
         if(part2Active) {
-            resultsPart2.add(duration);
+            part2Durations.add(duration);
         }
+    }
+
+
+    // !!!!!!!
+    public void setStartSeconds(double seconds) {
+        this.startSeconds = seconds;
     }
 
     @Override
     protected void afterSimulation() {
+
+        if (!running) {
+            System.out.println("\nSimulacia bola ručne pozastavená.");
+        }
+
+        if (part2Active) {
+            getPart2Result();
+        }
+
+
         double averageSeconds = this.timeSum / (double)this.replications;
 
         timeManager.reset();
@@ -267,29 +295,28 @@ public class SimulationModel extends MonteCarloCore{
         System.out.println("Cas prichodu: " + timeManager.toString());
         System.out.println("-----------------------------------------------");
         System.out.println(this.toString() + " | Priemer: " + getAverageArrivalSeconds());
+
+
     }
 
-    private void evaluateTask2() {
-        Collections.sort(resultsPart2);
+    // Zmeň "public void getPart2Result" na:
+    public String getPart2Result() {
+        Collections.sort(part2Durations);
+        int index = (int) (part2Durations.size() * 0.8);
+        if(index >= part2Durations.size()) index = part2Durations.size() - 1;
 
-        int index80 = (int) (resultsPart2.size() * 0.80);
-        if (index80 >= resultsPart2.size()) index80 = resultsPart2.size() - 1;
+        double duration = part2Durations.get(index);
+        double departure = targetArrivalPart2 - duration;
 
-        double travelTime80 = resultsPart2.get(index80);
-        double departureTime = targetArrivalTask2 - travelTime80;
-
-        // String builder pre prehľadný výpis
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n--- VÝSLEDOK ÚLOHY 2 (80% PRAVDEPODOBNOSŤ) ---\n");
-        sb.append("Cieľ príchodu: 07:35:00\n");
-        sb.append("Odsimulované replikácie: ").append(resultsPart2.size()).append("\n");
-        sb.append("80% ciest bolo kratších ako: ").append(formatTime(travelTime80)).append("\n");
-        sb.append("NAJNESKORŠÍ ODCHOD: ").append(formatTime(departureTime)).append("\n");
-        sb.append("----------------------------------------------\n");
-
-        // Ak máš v modeli prístup k view (cez Presenter), pošli to tam
-        // Inak to vypíš aspoň do System.out, kým to neprepojíš
-        System.out.println(sb.toString());
+        // Vrátime naformátovaný text namiesto obyčajného printu
+        return String.format(
+                "\n--- VÝSLEDOK ÚLOHY 2 (Verzia B) ---\n" +
+                        "Analyzovaný variant: %s\n" +
+                        "80%% jázd trvalo max: %s\n" +
+                        "ODPORÚČANÝ ODCHOD: %s\n" +
+                        "----------------------------------",
+                this.getClass().getSimpleName(), formatTime(duration), formatTime(departure)
+        );
     }
 
     public double getAverageArrivalSeconds() {
@@ -299,10 +326,17 @@ public class SimulationModel extends MonteCarloCore{
 
     public void setPart2Active(boolean active) {
         this.part2Active = active;
+
+        if (active) {
+            setStartSeconds(initialTime);
+        } else {
+            double normalStart = (START_HOUR * 3600) + (START_MINUTE * 60);
+            setStartSeconds(normalStart);
+        }
     }
 
 
-    private String formatTime(double totalSecs) {
+    public String formatTime(double totalSecs) {
         int s = (int) Math.abs(totalSecs);
         int h = s / 3600;
         int m = (s % 3600) / 60;
