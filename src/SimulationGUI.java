@@ -28,7 +28,7 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     private Presenter presenter;
 
     public SimulationGUI() {
-        setTitle("Monte Carlo Simulation - MVP");
+        setTitle("Monte Carlo Simulation");
         setSize(1200, 900);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -84,7 +84,12 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     }
 
     private void initTabs() {
-        String[] names = {"Variant 1", "Variant 2", "Variant 3", "Variant 4", "Variant 5", "Variant 6"};
+        String[] names = {"Variant 1: Zilina - Divinka - RT - Strecno - Zilina",
+                "Variant 2: Zilina - Strecno - RT - Divinka - Zilina",
+                "Variant 3: Zilina - RT - Divinka - Strecno - Zilina",
+                "Variant 4: Zilina - RT - Strecno - Divinka - Zilina",
+                "Variant 5: Zilina - Divinka - Strecno - RT - Zilina",
+                "Variant 6: Zilina - Strecno - Divinka - RT - Zilina"};
         for (int i = 0; i < 6; i++) {
             seriesArray[i] = new XYSeries("Priemerný čas");
             XYSeriesCollection dataset = new XYSeriesCollection(seriesArray[i]);
@@ -116,8 +121,12 @@ public class SimulationGUI extends JFrame implements ISimulationView {
                     long offset = java.util.TimeZone.getDefault().getRawOffset();
                     return sdf.format(new java.util.Date(ms - offset), toAppendTo, pos);
                 }
-                @Override public StringBuffer format(long number, StringBuffer toAppendTo, java.text.FieldPosition pos) { return format((double) number, toAppendTo, pos); }
-                @Override public Number parse(String source, java.text.ParsePosition parsePosition) { return null; }
+                @Override public StringBuffer format(long number, StringBuffer toAppendTo, java.text.FieldPosition pos) {
+                    return format((double) number, toAppendTo, pos);
+                }
+                @Override public Number parse(String source, java.text.ParsePosition parsePosition) {
+                    return null;
+                }
             });
 
             tabbedPane.addTab("V" + (i + 1), new ChartPanel(chart));
@@ -130,19 +139,27 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     @Override public void setSimulationRunning(boolean running) {
         runBtn.setEnabled(!running);
         runTask2Btn.setEnabled(!running);
-        stopBtn.setEnabled(true); // Necháme stop stále aktívny
+        stopBtn.setEnabled(true);
     }
 
-    @Override public int getReplications() { return Integer.parseInt(repsIn.getText()); }
-    @Override public double getSkipPercentage() { return Double.parseDouble(skipIn.getText()); }
-    @Override public int getMaxPoints() { return Integer.parseInt(pointsIn.getText()); }
-    @Override public void clearGraphs() { for (XYSeries s : seriesArray) s.clear(); }
-    @Override public void clearConsole() { resultsArea.setText(""); }
-
-    @Override
-    public boolean isPart2Enabled() {
-        return false;
+    @Override public int getReplications() {
+        return Integer.parseInt(repsIn.getText());
     }
+    @Override public double getSkipPercentage() {
+        return Double.parseDouble(skipIn.getText());
+    }
+    @Override public int getMaxPoints() {
+        return Integer.parseInt(pointsIn.getText());
+    }
+    @Override public void clearGraphs() {
+        for (XYSeries s : seriesArray) {
+            s.clear();
+        }
+    }
+    @Override public void clearConsole() {
+        resultsArea.setText("");
+    }
+
 
     @Override public void appendToConsole(String text) {
         SwingUtilities.invokeLater(() -> {

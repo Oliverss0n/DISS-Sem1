@@ -108,6 +108,105 @@ public class SimulationModel extends MonteCarloCore{
 
 
 
+
+    @Override
+    protected void beforeReplication() {
+        timeManager.reset();
+    }
+
+    @Override
+    protected void doReplication() {}
+
+    @Override
+    protected void afterReplication() {
+        currentReplication++;
+        double duration = timeManager.getTotalSeconds() - this.startSeconds;
+        timeSum += duration;
+
+        if(part2Active) {
+            part2Durations.add(duration);
+        }
+    }
+
+
+    // !!!!!!!
+    public void setStartSeconds(double seconds) {
+        this.startSeconds = seconds;
+    }
+
+    @Override
+    protected void afterSimulation() {
+
+        if (!running) {
+            System.out.println("\nSimulacia bola ručne pozastavená.");
+        }
+
+        if (part2Active) {
+            getPart2Result();
+        }
+
+
+        double averageSeconds = this.timeSum / (double)this.replications;
+
+        timeManager.reset();
+        timeManager.addSeconds(averageSeconds);
+
+        System.out.println(this.toString());
+        System.out.println("Cas prichodu: " + timeManager.toString());
+        System.out.println("-----------------------------------------------");
+        System.out.println(this.toString() + " | Priemer: " + getAverageArrivalSeconds());
+
+
+    }
+
+    public String getPart2Result() {
+        Collections.sort(part2Durations);
+        int index = (int) (part2Durations.size() * 0.8);
+
+        double duration = part2Durations.get(index);
+        double departure = targetArrivalPart2 - duration;
+
+        // String format vygenerovala AI
+        return String.format(
+                "\n--- VÝSLEDOK ÚLOHY 2---\n" +
+                        "Analyzovaný variant: %s\n" +
+                        "80%% jázd trvalo max: %s\n" +
+                        "ODPORÚČANÝ ODCHOD: %s\n" +
+                        "----------------------------------",
+                this.getClass().getSimpleName(), formatTime(duration), formatTime(departure)
+        );
+    }
+
+    public double getAverageArrivalSeconds() {
+        if (currentReplication == 0) {
+            return startSeconds;
+        }
+        return (timeSum / currentReplication) + startSeconds;
+    }
+
+    public void setPart2Active(boolean active) {
+        this.part2Active = active;
+
+        if (active) {
+            setStartSeconds(initialTime);
+        } else {
+            double normalStart = (START_HOUR * 3600) + (START_MINUTE * 60);
+            setStartSeconds(normalStart);
+        }
+    }
+
+
+    //vygenerovala AI
+    public String formatTime(double totalSecs) {
+        int s = (int) Math.abs(totalSecs);
+        int h = s / 3600;
+        int m = (s % 3600) / 60;
+        int sec = s % 60;
+        return String.format("%02d:%02d:%02d", h, m, sec);
+    }
+
+
+    //-------------------------------------------TRASY---------------------------------------------------------------
     //------------------------------------ DIVINKA - ZILINA - STRECNO------------------------------------------------
     protected void driveZilinaToDivinka() {
         double timeToK = timeManager.calcTime(2, black.sample());
@@ -245,105 +344,6 @@ public class SimulationModel extends MonteCarloCore{
 
         timeManager.addSeconds(timeToK + timeFromK);
     }
-
-
-
-
-    @Override
-    protected void beforeReplication() {
-        timeManager.reset();
-    }
-
-    @Override
-    protected void doReplication() {}
-
-    @Override
-    protected void afterReplication() {
-        currentReplication++;
-        double duration = timeManager.getTotalSeconds() - this.startSeconds;
-        timeSum += duration;
-
-        if(part2Active) {
-            part2Durations.add(duration);
-        }
-    }
-
-
-    // !!!!!!!
-    public void setStartSeconds(double seconds) {
-        this.startSeconds = seconds;
-    }
-
-    @Override
-    protected void afterSimulation() {
-
-        if (!running) {
-            System.out.println("\nSimulacia bola ručne pozastavená.");
-        }
-
-        if (part2Active) {
-            getPart2Result();
-        }
-
-
-        double averageSeconds = this.timeSum / (double)this.replications;
-
-        timeManager.reset();
-        timeManager.addSeconds(averageSeconds);
-
-        System.out.println(this.toString());
-        System.out.println("Cas prichodu: " + timeManager.toString());
-        System.out.println("-----------------------------------------------");
-        System.out.println(this.toString() + " | Priemer: " + getAverageArrivalSeconds());
-
-
-    }
-
-    // Zmeň "public void getPart2Result" na:
-    public String getPart2Result() {
-        Collections.sort(part2Durations);
-        int index = (int) (part2Durations.size() * 0.8);
-        if(index >= part2Durations.size()) index = part2Durations.size() - 1;
-
-        double duration = part2Durations.get(index);
-        double departure = targetArrivalPart2 - duration;
-
-        // Vrátime naformátovaný text namiesto obyčajného printu
-        return String.format(
-                "\n--- VÝSLEDOK ÚLOHY 2 (Verzia B) ---\n" +
-                        "Analyzovaný variant: %s\n" +
-                        "80%% jázd trvalo max: %s\n" +
-                        "ODPORÚČANÝ ODCHOD: %s\n" +
-                        "----------------------------------",
-                this.getClass().getSimpleName(), formatTime(duration), formatTime(departure)
-        );
-    }
-
-    public double getAverageArrivalSeconds() {
-        if (currentReplication == 0) return startSeconds;
-        return (timeSum / currentReplication) + startSeconds;
-    }
-
-    public void setPart2Active(boolean active) {
-        this.part2Active = active;
-
-        if (active) {
-            setStartSeconds(initialTime);
-        } else {
-            double normalStart = (START_HOUR * 3600) + (START_MINUTE * 60);
-            setStartSeconds(normalStart);
-        }
-    }
-
-
-    public String formatTime(double totalSecs) {
-        int s = (int) Math.abs(totalSecs);
-        int h = s / 3600;
-        int m = (s % 3600) / 60;
-        int sec = s % 60;
-        return String.format("%02d:%02d:%02d", h, m, sec);
-    }
-
 
 
 
