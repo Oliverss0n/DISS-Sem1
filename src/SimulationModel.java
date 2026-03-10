@@ -36,21 +36,20 @@ public class SimulationModel extends MonteCarloCore{
 
 
 
-    private double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
+    protected double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
 
     protected ArrayList<Double> graphPoints =new ArrayList<>();
     protected int currentReplication;
 
     // ---------------------------- uloha 2 -------------------------
-    private static final int U2_HOUR = 7;
+    /*private static final int U2_HOUR = 7;
     private static final int U2_MINUTE = 35;
 
     private static final int U2_INIT_HOUR = 7;
     private static final int U2_INIT_MINUTE = 0;
     private double targetArrivalPart2 = (U2_HOUR * 3600) + (U2_MINUTE * 60);
     private double initialTime = (U2_INIT_HOUR * 3600) + (U2_INIT_MINUTE * 60);
-    private boolean part2Active = false;
-    private LinkedList<Double> part2Durations = new LinkedList<>();
+*/
 
 
     //-------------------------------------------------------------
@@ -87,9 +86,6 @@ public class SimulationModel extends MonteCarloCore{
         this.currentReplication = 0;
         this.graphPoints.clear();
 
-        if(part2Active) {
-            this.part2Durations.clear();
-        }
     }
 
     protected double calculateLeavingKTime(double distance, double speed, double delayBeforeK) {
@@ -122,16 +118,6 @@ public class SimulationModel extends MonteCarloCore{
         currentReplication++;
         double duration = timeManager.getTotalSeconds() - this.startSeconds;
         timeSum += duration;
-
-        if(part2Active) {
-            part2Durations.add(duration);
-        }
-    }
-
-
-    // !!!!!!!
-    public void setStartSeconds(double seconds) {
-        this.startSeconds = seconds;
     }
 
     @Override
@@ -140,11 +126,6 @@ public class SimulationModel extends MonteCarloCore{
         if (!running) {
             System.out.println("\nSimulacia bola ručne pozastavená.");
         }
-
-        if (part2Active) {
-            getPart2Result();
-        }
-
 
         double averageSeconds = this.timeSum / (double)this.replications;
 
@@ -159,23 +140,7 @@ public class SimulationModel extends MonteCarloCore{
 
     }
 
-    public String getPart2Result() {
-        Collections.sort(part2Durations);
-        int index = (int) (part2Durations.size() * 0.8);
 
-        double duration = part2Durations.get(index);
-        double departure = targetArrivalPart2 - duration;
-
-        // String format vygenerovala AI
-        return String.format(
-                "\n--- VÝSLEDOK ÚLOHY 2---\n" +
-                        "Analyzovaný variant: %s\n" +
-                        "80%% jázd trvalo max: %s\n" +
-                        "ODPORÚČANÝ ODCHOD: %s\n" +
-                        "----------------------------------",
-                this.getClass().getSimpleName(), formatTime(duration), formatTime(departure)
-        );
-    }
 
     public double getAverageArrivalSeconds() {
         if (currentReplication == 0) {
@@ -184,26 +149,6 @@ public class SimulationModel extends MonteCarloCore{
         return (timeSum / currentReplication) + startSeconds;
     }
 
-    public void setPart2Active(boolean active) {
-        this.part2Active = active;
-
-        if (active) {
-            setStartSeconds(initialTime);
-        } else {
-            double normalStart = (START_HOUR * 3600) + (START_MINUTE * 60);
-            setStartSeconds(normalStart);
-        }
-    }
-
-
-    //vygenerovala AI
-    public String formatTime(double totalSecs) {
-        int s = (int) Math.abs(totalSecs);
-        int h = s / 3600;
-        int m = (s % 3600) / 60;
-        int sec = s % 60;
-        return String.format("%02d:%02d:%02d", h, m, sec);
-    }
 
 
     //-------------------------------------------TRASY---------------------------------------------------------------
@@ -345,6 +290,12 @@ public class SimulationModel extends MonteCarloCore{
         timeManager.addSeconds(timeToK + timeFromK);
     }
 
-
+    public String formatTime(double totalSecs) {
+        int s = (int) Math.abs(totalSecs);
+        int h = s / 3600;
+        int m = (s % 3600) / 60;
+        int sec = s % 60;
+        return String.format("%02d:%02d:%02d", h, m, sec);
+    }
 
 }
