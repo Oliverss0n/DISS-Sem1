@@ -66,27 +66,42 @@ public class Presenter {
     }
 
     private void runVariant(int index, SimulationModel model, int totalReps) {
+        // 1. Výpočet limitu - od ktorej replikácie začať vykresľovať
+        int skipLimit = (int) (totalReps * (view.getSkipPercentage() / 100.0));
+
         SwingWorker<Void, double[]> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                startGraphUpdater(model, totalReps, this);
+                // Spustíme updater v samostatnom vlákne
+                startGraphUpdater(model, this, skipLimit);
+
+                // Spustíme samotnú simuláciu
                 model.runSimulation(totalReps);
                 return null;
             }
 
-            private void startGraphUpdater(SimulationModel model, int totalReps, SwingWorker<?,?> worker) {
+            private void startGraphUpdater(SimulationModel model, SwingWorker<?,?> worker, int skipLimit) {
                 new Thread(() -> {
-                    int lastPublishedRep = 0;
-                    int skipCount = (int) (totalReps * (view.getSkipPercentage() / 100.0));
-                    int interval = Math.max(1, (totalReps - skipCount) / view.getMaxPoints());
-
+                    int lastIndex = 0;
                     while (model.isRunning() && !worker.isCancelled()) {
-                        int currentRep = model.currentReplication;
-                        if (currentRep > skipCount && currentRep > lastPublishedRep + interval) {
-                            publish(new double[]{(double) currentRep, model.getAverageArrivalSeconds()});
-                            lastPublishedRep = currentRep;
+                        int size = model.graphPoints.size();
+                        while (lastIndex < size) {
+                            double[] point = model.graphPoints.get(lastIndex);
+
+                            // 2. FILTROVANIE: bod pošleme do grafu len ak prekročil skipLimit
+                            if (point[0] >= skipLimit) {
+                                publish(point);
+                            }
+                            lastIndex++;
                         }
                         try { Thread.sleep(50); } catch (InterruptedException e) { break; }
+                    }
+                    // Dočerpanie zvyšných bodov po skončení modelu
+                    for (int i = lastIndex; i < model.graphPoints.size(); i++) {
+                        double[] point = model.graphPoints.get(i);
+                        if (point[0] >= skipLimit) {
+                            publish(point);
+                        }
                     }
                 }).start();
             }
@@ -100,10 +115,10 @@ public class Presenter {
 
             @Override
             protected void done() {
-                if (!isCancelled()) {
-                    view.appendToConsole("Variant " + (index + 1) +
-                            " dokončený. Priemer: " + formatToTime(model.getAverageArrivalSeconds()));
-                }
+                String status = isCancelled() ? "[STOP] " : "[OK] ";
+                view.appendToConsole(status + "V" + (index + 1) + ": " +
+                        formatToTime(model.getAverageArrivalSeconds()));
+                view.setSimulationRunning(false);
             }
         };
 
@@ -143,4 +158,6 @@ public class Presenter {
         int s = (int) (totalSeconds % 60);
         return String.format("%02d:%02d:%02d", h, m, s);
     }
+
+
 }

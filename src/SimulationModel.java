@@ -38,21 +38,10 @@ public class SimulationModel extends MonteCarloCore{
 
     protected double startSeconds = (START_HOUR * 3600) + (START_MINUTE * 60);
 
-    protected ArrayList<Double> graphPoints =new ArrayList<>();
+    //protected ArrayList<Double> graphPoints =new ArrayList<>();
+    protected ArrayList<double[]> graphPoints = new ArrayList<>();
     protected int currentReplication;
 
-    // ---------------------------- uloha 2 -------------------------
-    /*private static final int U2_HOUR = 7;
-    private static final int U2_MINUTE = 35;
-
-    private static final int U2_INIT_HOUR = 7;
-    private static final int U2_INIT_MINUTE = 0;
-    private double targetArrivalPart2 = (U2_HOUR * 3600) + (U2_MINUTE * 60);
-    private double initialTime = (U2_INIT_HOUR * 3600) + (U2_INIT_MINUTE * 60);
-*/
-
-
-    //-------------------------------------------------------------
 
     @Override
     public void runSimulation(int replications) {
@@ -115,9 +104,14 @@ public class SimulationModel extends MonteCarloCore{
 
     @Override
     protected void afterReplication() {
-        currentReplication++;
         double duration = timeManager.getTotalSeconds() - this.startSeconds;
         timeSum += duration;
+        currentReplication++;
+
+        int interval = Math.max(1, replications / 1000);
+        if (currentReplication % interval == 0 || currentReplication == replications) {
+            graphPoints.add(new double[]{currentReplication, getAverageArrivalSeconds()});
+        }
     }
 
     @Override
@@ -143,10 +137,14 @@ public class SimulationModel extends MonteCarloCore{
 
 
     public double getAverageArrivalSeconds() {
-        if (currentReplication == 0) {
+
+        int current = this.currentReplication;
+        double sum = this.timeSum;
+
+        if (current <= 0) {
             return startSeconds;
         }
-        return (timeSum / currentReplication) + startSeconds;
+        return (sum / (double) current) + startSeconds;
     }
 
 

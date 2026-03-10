@@ -41,8 +41,6 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         settingsPanel.add(repsIn);
         settingsPanel.add(new JLabel("Vynechať %:"));
         settingsPanel.add(skipIn);
-        settingsPanel.add(new JLabel("Max. bodov:"));
-        settingsPanel.add(pointsIn);
         settingsPanel.add(runBtn);
         settingsPanel.add(stopBtn);
 
@@ -148,8 +146,16 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     @Override public double getSkipPercentage() {
         return Double.parseDouble(skipIn.getText());
     }
-    @Override public int getMaxPoints() {
-        return Integer.parseInt(pointsIn.getText());
+    @Override
+    public int getMaxPoints() {
+        try {
+            int reps = Integer.parseInt(repsIn.getText());
+            // Chceme aspoň 50 bodov, aby aj pri malých simuláciách bola čiara pekná
+            if (reps <= 50) return reps;
+            return Math.min(reps, 1000);
+        } catch (Exception e) {
+            return 500;
+        }
     }
     @Override public void clearGraphs() {
         for (XYSeries s : seriesArray) {
@@ -167,6 +173,9 @@ public class SimulationGUI extends JFrame implements ISimulationView {
             resultsArea.setCaretPosition(resultsArea.getDocument().getLength());
         });
     }
+
+    // V SimulationGUI.java
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new SimulationGUI().setVisible(true));
