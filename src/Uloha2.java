@@ -85,7 +85,6 @@ public class Uloha2 extends SimulationModel {
         double duration = durations.get(index);
         double departure = TARGET_ARRIVAL - duration;
 
-        // formatTime() sa zavolá z SimulationModel (vďaka dedičnosti)
         return String.format(
                 "\n--- VÝSLEDOK ÚLOHY 2 ---\n" +
                         "80%% jázd trvalo max: %s\n" +

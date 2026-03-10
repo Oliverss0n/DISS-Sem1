@@ -14,14 +14,14 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     private JTextField skipIn = new JTextField("10", 4);
     private JTextField pointsIn = new JTextField("1000", 4);
 
-    private JButton runBtn = new JButton("Spustiť všetko (Grafy)");
+    private JButton runBtn = new JButton("Spustiť úlohu 1");
     private JButton stopBtn = new JButton("Zastaviť");
 
     // PRIDANÉ PRE ÚLOHU 2
     private JComboBox<String> variantCombo = new JComboBox<>(new String[]{
             "Variant 1", "Variant 2", "Variant 3", "Variant 4", "Variant 5", "Variant 6"
     });
-    private JButton runTask2Btn = new JButton("Spustiť Úlohu 2 (80%)");
+    private JButton runTask2Btn = new JButton("Spustiť Úlohu 2");
 
     private JTextArea resultsArea = new JTextArea(10, 50);
     private XYSeries[] seriesArray = new XYSeries[6];
@@ -75,7 +75,7 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         resultsArea.setEditable(false);
         resultsArea.setFont(new Font("Monospaced", Font.BOLD, 13));
         JScrollPane scrollPane = new JScrollPane(resultsArea);
-        scrollPane.setBorder(BorderFactory.createTitledBorder("Konzola a výsledky"));
+        scrollPane.setBorder(BorderFactory.createTitledBorder("Konzola"));
 
         JPanel southPanel = new JPanel(new BorderLayout());
         southPanel.setPreferredSize(new Dimension(1200, 200));
