@@ -116,35 +116,22 @@ public class SimulationModel extends MonteCarloCore{
 
     @Override
     protected void afterSimulation() {
-
-        if (!running) {
-            System.out.println("\nSimulacia bola ručne pozastavená.");
-        }
-
         double averageSeconds = this.timeSum / (double)this.replications;
-
         timeManager.reset();
         timeManager.addSeconds(averageSeconds);
-
-        System.out.println(this.toString());
-        System.out.println("Cas prichodu: " + timeManager.toString());
-        System.out.println("-----------------------------------------------");
-        System.out.println(this.toString() + " | Priemer: " + getAverageArrivalSeconds());
-
-
     }
 
 
 
     public double getAverageArrivalSeconds() {
 
-        int current = this.currentReplication;
+        double current = this.currentReplication;
         double sum = this.timeSum;
 
         if (current <= 0) {
             return startSeconds;
         }
-        return (sum / (double) current) + startSeconds;
+        return (sum / current) + startSeconds;
     }
 
 

@@ -3,12 +3,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Presenter {
+    //TRIEDA PRESENTER - BOLA IMPLEMENTOVANA POMOCOU AI
     private final ISimulationView view;
     private final List<SwingWorker<Void, ?>> activeWorkers = new ArrayList<>();
     private SimulationModel[] variants;
     private Uloha2 task2Model;
-
-    // Potrebujeme referenciu na vlákno úlohy 2, aby sme ho vedeli stopnúť
     private Thread task2Thread;
 
     public Presenter(ISimulationView view) {
@@ -45,8 +44,6 @@ public class Presenter {
 
                 this.task2Model.runSimulation(reps);
 
-                // ZMENA: Výsledok vypíšeme vždy, ak máme aspoň jednu odbehnutú replikáciu
-                // getFinalResult() už v sebe má kontrolu na durations.isEmpty()
                 String result = this.task2Model.getFinalResult();
 
                 if (!result.equals("Žiadne dáta.")) {
@@ -66,16 +63,13 @@ public class Presenter {
     }
 
     private void runVariant(int index, SimulationModel model, int totalReps) {
-        // 1. Výpočet limitu - od ktorej replikácie začať vykresľovať
         int skipLimit = (int) (totalReps * (view.getSkipPercentage() / 100.0));
 
         SwingWorker<Void, double[]> worker = new SwingWorker<>() {
             @Override
             protected Void doInBackground() throws Exception {
-                // Spustíme updater v samostatnom vlákne
                 startGraphUpdater(model, this, skipLimit);
 
-                // Spustíme samotnú simuláciu
                 model.runSimulation(totalReps);
                 return null;
             }
@@ -88,7 +82,6 @@ public class Presenter {
                         while (lastIndex < size) {
                             double[] point = model.graphPoints.get(lastIndex);
 
-                            // 2. FILTROVANIE: bod pošleme do grafu len ak prekročil skipLimit
                             if (point[0] >= skipLimit) {
                                 publish(point);
                             }
@@ -96,7 +89,6 @@ public class Presenter {
                         }
                         try { Thread.sleep(50); } catch (InterruptedException e) { break; }
                     }
-                    // Dočerpanie zvyšných bodov po skončení modelu
                     for (int i = lastIndex; i < model.graphPoints.size(); i++) {
                         double[] point = model.graphPoints.get(i);
                         if (point[0] >= skipLimit) {
@@ -127,22 +119,23 @@ public class Presenter {
     }
 
     public void stopSimulation() {
-        // 1. Zastavíme modely pre grafy
+
         if (variants != null) {
-            for (SimulationModel v : variants) if (v != null) v.stop();
+            for (SimulationModel v : variants){
+                if (v != null){
+                    v.stop();
+                }
+            }
         }
 
-        // 2. Zastavíme model Úlohy 2
         if (task2Model != null) {
             task2Model.stop();
         }
 
-        // 3. Prerušíme samotné vlákno Úlohy 2, ak beží
         if (task2Thread != null) {
             task2Thread.interrupt();
         }
 
-        // 4. Zastavíme SwingWorkery (grafy)
         for (SwingWorker<?, ?> w : activeWorkers) {
             w.cancel(true);
         }

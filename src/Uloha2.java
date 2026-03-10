@@ -27,7 +27,6 @@ public class Uloha2 extends SimulationModel {
 
     @Override
     protected void doReplication() {
-        // Na základe indexu z Presentera zavoláme správnu trasu
         switch (chosenVariant) {
             case 0: // Variant1: Zilina - Divinka - RT - Strecno - Zilina
                 driveZilinaToDivinka();
@@ -75,12 +74,13 @@ public class Uloha2 extends SimulationModel {
     }
 
     public String getFinalResult() {
-        if (durations.isEmpty()) return "Žiadne dáta.";
 
         Collections.sort(durations);
 
         int index = (int) (durations.size() * 0.8);
-        if (index >= durations.size()) index = durations.size() - 1;
+        if (index >= durations.size()) {
+            index = durations.size() - 1;
+        }
 
         double duration = durations.get(index);
         double departure = TARGET_ARRIVAL - duration;

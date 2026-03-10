@@ -9,15 +9,15 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 
 public class SimulationGUI extends JFrame implements ISimulationView {
+
+    //TRIEDA SIMULATIONGUI - BOLA IMPLEMENTOVANA POMOCOU AI
     private JTabbedPane tabbedPane = new JTabbedPane();
     private JTextField repsIn = new JTextField("1000000", 8);
     private JTextField skipIn = new JTextField("10", 4);
-    private JTextField pointsIn = new JTextField("1000", 4);
 
     private JButton runBtn = new JButton("Spustiť úlohu 1");
     private JButton stopBtn = new JButton("Zastaviť");
 
-    // PRIDANÉ PRE ÚLOHU 2
     private JComboBox<String> variantCombo = new JComboBox<>(new String[]{
             "Variant 1", "Variant 2", "Variant 3", "Variant 4", "Variant 5", "Variant 6"
     });
@@ -35,7 +35,6 @@ public class SimulationGUI extends JFrame implements ISimulationView {
 
         presenter = new Presenter(this);
 
-        // Horný panel - Nastavenia
         JPanel settingsPanel = new JPanel();
         settingsPanel.add(new JLabel("Replikácie:"));
         settingsPanel.add(repsIn);
@@ -44,20 +43,18 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         settingsPanel.add(runBtn);
         settingsPanel.add(stopBtn);
 
-        // Panel pre Úlohu 2
         JPanel task2Panel = new JPanel();
         task2Panel.setBorder(BorderFactory.createTitledBorder("Nastavenia pre Úlohu 2"));
         task2Panel.add(new JLabel("Vyber variant:"));
         task2Panel.add(variantCombo);
         task2Panel.add(runTask2Btn);
 
-        // Spojenie panelov na sever
+
         JPanel northContainer = new JPanel(new GridLayout(2, 1));
         northContainer.add(settingsPanel);
         northContainer.add(task2Panel);
         add(northContainer, BorderLayout.NORTH);
 
-        // Event Listeners
         runBtn.addActionListener(e -> presenter.startSimulation());
         stopBtn.addActionListener(e -> presenter.stopSimulation());
         runTask2Btn.addActionListener(e -> {
@@ -98,19 +95,17 @@ public class SimulationGUI extends JFrame implements ISimulationView {
             // --- ŠKÁLOVANIE OSI X ---
             NumberAxis xAxis = (NumberAxis) plot.getDomainAxis();
             xAxis.setAutoRange(true);
-            xAxis.setLowerMargin(0.0); // 1% medzera na začiatku
-            xAxis.setUpperMargin(0.0); // 1% medzera na konci
+            xAxis.setLowerMargin(0.0);
+            xAxis.setUpperMargin(0.0);
 
             // --- ŠKÁLOVANIE OSI Y ---
             NumberAxis yAxis = (NumberAxis) plot.getRangeAxis();
             yAxis.setAutoRange(true);
-            yAxis.setAutoRangeIncludesZero(false); // Dôležité: nezobrazuje 00:00:00, ak nemusí
+            yAxis.setAutoRangeIncludesZero(false);
 
-            // Tieto marginy zabezpečia, že čiara nebude na hornom/dolnom okraji
-            yAxis.setLowerMargin(0.0); // 5% miesto pod čiarou
-            yAxis.setUpperMargin(0.0); // 5% miesto nad čiarou
+            yAxis.setLowerMargin(0.0);
+            yAxis.setUpperMargin(0.0);
 
-            // Formátovač času
             yAxis.setNumberFormatOverride(new java.text.NumberFormat() {
                 private final SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
                 @Override
@@ -146,17 +141,7 @@ public class SimulationGUI extends JFrame implements ISimulationView {
     @Override public double getSkipPercentage() {
         return Double.parseDouble(skipIn.getText());
     }
-    @Override
-    public int getMaxPoints() {
-        try {
-            int reps = Integer.parseInt(repsIn.getText());
-            // Chceme aspoň 50 bodov, aby aj pri malých simuláciách bola čiara pekná
-            if (reps <= 50) return reps;
-            return Math.min(reps, 1000);
-        } catch (Exception e) {
-            return 500;
-        }
-    }
+
     @Override public void clearGraphs() {
         for (XYSeries s : seriesArray) {
             s.clear();
@@ -166,16 +151,12 @@ public class SimulationGUI extends JFrame implements ISimulationView {
         resultsArea.setText("");
     }
 
-
     @Override public void appendToConsole(String text) {
         SwingUtilities.invokeLater(() -> {
             resultsArea.append(text + "\n");
             resultsArea.setCaretPosition(resultsArea.getDocument().getLength());
         });
     }
-
-    // V SimulationGUI.java
-
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new SimulationGUI().setVisible(true));
